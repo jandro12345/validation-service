@@ -1,5 +1,5 @@
 """
-Init schema database pg and ch
+Init schema database pg
 """
 
 from os import getenv, walk, path
