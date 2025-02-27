@@ -34,13 +34,16 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
   consumer:
     image: consumer:latest
     ports:
@@ -55,8 +58,8 @@ services:
       - TOKEN=y25.app_pg.token$%
       - RABBITMQ_HOST=rabbitmq
     depends_on:
-    - pg
-    - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       - app-network
 
