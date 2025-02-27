@@ -1,7 +1,82 @@
+# version: '3.8'
+# services:
+#   app:
+#     image: app:latest
+#     ports:
+#       - "9001:9001"
+#     environment:
+#       - PG_PASS=Pg.2025.appYk23_pg
+#       - PG_USER=app_pg
+#       - PG_DB=app_pg
+#       - PG_PORT=5432
+#       - PG_HOST=pg
+#       - PYTHONPATH=./
+#       - TOKEN=y25.app_pg.token$%
+#     depends_on:
+#       - pg
+#       - rabbitmq
+#     networks:
+#       - app-network
+#   pg:
+#     image: postgres
+#     environment:
+#       POSTGRES_DB: app_pg
+#       POSTGRES_USER: app_pg
+#       POSTGRES_PASSWORD: Pg.2025.appYk23_pg
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - database_data:/var/lib/postgresql/data
+#     networks:
+#       - app-network
+#   rabbitmq:
+#     image: "rabbitmq:management"
+#     ports:
+#       - "15672:15672"
+#       - "5672:5672"
+#     volumes:
+#       - rabbitmq_data:/var/lib/rabbitmq
+#     networks:
+#       - app-network
+#     healthcheck:
+#       test: ["CMD", "rabbitmqctl", "status"]
+#       interval: 10s
+#       retries: 5
+#       start_period: 30s
+#       timeout: 10s
+#   consumer:
+#     image: consumer:latest
+#     ports:
+#       - "9002:9002"
+#     environment:
+#       - PG_PASS=Pg.2025.appYk23_pg
+#       - PG_USER=app_pg
+#       - PG_DB=app_pg
+#       - PG_PORT=5432
+#       - PG_HOST=pg
+#       - PYTHONPATH=./
+#       - TOKEN=y25.app_pg.token$%
+#       - RABBITMQ_HOST=rabbitmq
+#     depends_on:
+#       rabbitmq:
+#         condition: service_healthy
+#     networks:
+#       - app-network
+
+# volumes:
+#   database_data:
+#     driver: local
+#   rabbitmq_data:
+#     driver: local
+# networks:
+#   app-network:
+#     driver: bridge
+
+
 version: '3.8'
 services:
   app:
-    image: app:latest
+    image: jandrov/validation-service:main
     ports:
       - "9001:9001"
     environment:
@@ -14,7 +89,6 @@ services:
       - TOKEN=y25.app_pg.token$%
     depends_on:
       - pg
-      - rabbitmq
     networks:
       - app-network
   pg:
@@ -29,44 +103,9 @@ services:
       - database_data:/var/lib/postgresql/data
     networks:
       - app-network
-  rabbitmq:
-    image: "rabbitmq:management"
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
-  consumer:
-    image: consumer:latest
-    ports:
-      - "9002:9002"
-    environment:
-      - PG_PASS=Pg.2025.appYk23_pg
-      - PG_USER=app_pg
-      - PG_DB=app_pg
-      - PG_PORT=5432
-      - PG_HOST=pg
-      - PYTHONPATH=./
-      - TOKEN=y25.app_pg.token$%
-      - RABBITMQ_HOST=rabbitmq
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-    networks:
-      - app-network
 
 volumes:
   database_data:
-    driver: local
-  rabbitmq_data:
     driver: local
 networks:
   app-network:
