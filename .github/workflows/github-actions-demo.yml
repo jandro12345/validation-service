@@ -1,63 +1,58 @@
-name: CI with Docker Compose
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - feature/validation-data  # O la rama que prefieras
 
 jobs:
-  docker-compose:
-    runs-on: ubuntu-latest
-
-    services:
-      # PostgreSQL y RabbitMQ como servicios en GitHub Actions
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_DB: app_pg
-          POSTGRES_USER: app_pg
-          POSTGRES_PASSWORD: Pg.2025.appYk23_pg
-        ports:
-          - 5432:5432
-        options: --health-cmd="pg_isready -U app_pg -d app_pg" --health-interval=10s --health-retries=5 --health-start-period=30s --health-timeout=10s
-
-      rabbitmq:
-        image: "rabbitmq:management"
-        ports:
-          - 5672:5672
-          - 15672:15672
-        options: --health-cmd="rabbitmqctl status" --health-interval=10s --health-retries=5 --health-start-period=30s --health-timeout=10s
+  build:
+    runs-on: ubuntu-latest  # Usar la última versión de Ubuntu disponible
 
     steps:
-      - name: Checkout Repository
+      # Paso 1: Hacer checkout del código
+      - name: Checkout code
         uses: actions/checkout@v2
 
+      # Paso 2: Configurar Docker
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
 
-      - name: Cache Docker layers
-        uses: actions/cache@v2
+      # Paso 3: Construir la imagen para 'app' desde el Dockerfile
+      - name: Build app image
+        run: |
+          docker build -t app:latest ./app  # Ruta al Dockerfile de 'app'
+
+      # Paso 4: Construir la imagen para 'consumer' desde el Dockerfile
+      - name: Build consumer image
+        run: |
+          docker build -t myconsumer:latest ./consumer  # Ruta al Dockerfile de 'consumer'
+
+      # Paso 5: Subir las imágenes a Docker Hub o GitHub Container Registry
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and run Docker Compose
+      - name: Push images to Docker Hub
         run: |
-          docker-compose -f docker-compose.yml build
+          docker tag myapp:latest ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          docker tag myconsumer:latest ${{ secrets.DOCKER_USERNAME }}/myconsumer:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/myapp:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/myconsumer:latest
+
+      # Paso 6: Ejecutar Docker Compose (si es necesario)
+      - name: Run Docker Compose
+        run: |
           docker-compose -f docker-compose.yml up -d
-
-      - name: Run Tests
+          
+      # Paso 7: Realizar pruebas (si las tienes)
+      - name: Run tests
         run: |
-          # Aquí deberías agregar el comando para ejecutar tus pruebas, por ejemplo:
-          # docker-compose exec consumer pytest
           docker-compose exec consumer pytest --maxfail=1 --disable-warnings -q
 
+      # Paso 8: Apagar contenedores después de las pruebas
       - name: Shut down Docker Compose
         run: |
-          docker-compose -f docker-compose.yml down
-
+          docker-compose down
