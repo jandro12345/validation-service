@@ -1,1 +1,63 @@
+name: CI with Docker Compose
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-compose:
+    runs-on: ubuntu-latest
+
+    services:
+      # PostgreSQL y RabbitMQ como servicios en GitHub Actions
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: app_pg
+          POSTGRES_USER: app_pg
+          POSTGRES_PASSWORD: Pg.2025.appYk23_pg
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U app_pg -d app_pg" --health-interval=10s --health-retries=5 --health-start-period=30s --health-timeout=10s
+
+      rabbitmq:
+        image: "rabbitmq:management"
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: --health-cmd="rabbitmqctl status" --health-interval=10s --health-retries=5 --health-start-period=30s --health-timeout=10s
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build and run Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.yml up -d
+
+      - name: Run Tests
+        run: |
+          # Aquí deberías agregar el comando para ejecutar tus pruebas, por ejemplo:
+          # docker-compose exec consumer pytest
+          docker-compose exec consumer pytest --maxfail=1 --disable-warnings -q
+
+      - name: Shut down Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml down
 
