@@ -17,9 +17,9 @@ before_script:
   - apk add --no-cache curl
 
 build:
-  stage: build
+  stage: build  
   script:
-    #- docker login -u $CI_USER -p $CI_PSW
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin
     - docker build -t $DOCKER_REGISTRY/$DOCKER_PATH:$CI_COMMIT_REF_NAME .
     - docker push $DOCKER_REGISTRY/$DOCKER_PATH:$CI_COMMIT_REF_NAME
   only:
