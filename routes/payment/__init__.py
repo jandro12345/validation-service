@@ -7,10 +7,9 @@ import jwt
 from fastapi import APIRouter, Response, Depends
 from psycopg2.extras import RealDictCursor
 from psycopg2 import connect
-from psycopg2.errors import UniqueViolation
 
 from models.payment import AddPayment
-from tool import DSN, verification_token
+from tool import DSN, verification_token, connect_to_rabbitmq, send_message
 
 payment_route = APIRouter(prefix="/payment")
 
@@ -78,7 +77,10 @@ async def add_payment(payment_data: AddPayment, response: Response):
                 },
                 "amount": payment_data.amount
             }
+            channel = connect_to_rabbitmq()
+            send_message(channel, "payment_queue", send_data)
             body = {
-                "data": send_data
+                "message": "Transaccion Exitosa",
+                "error": False
             }
     return body
