@@ -5,7 +5,6 @@ services:
 
 stages:
   - build
-  - deploy
 
 variables:
   IMAGE_NAME: "validation-service"

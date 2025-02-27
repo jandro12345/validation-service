@@ -5,3 +5,4 @@ __pycache__/*
 test.py
 test_consumer/
 test*
+pg_data/
