@@ -77,6 +77,3 @@ def test_add_payment_success(success_payment_data):
     assert response.status_code == 200
     assert response.json()["message"] == "Transaccion Exitosa"
     assert response.json()["error"] == False
-
-
-
