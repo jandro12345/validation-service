@@ -1,26 +1,25 @@
-image: docker:latest
+image: docker:latest 
 
 services:
   - docker:dind
 
 stages:
   - build
-  - test
   - deploy
 
 variables:
-  IMAGE_NAME: "app"
+  IMAGE_NAME: "validation-service"
   DOCKER_REGISTRY: "docker.io"
   DOCKER_TLS_CERTDIR: "/certs"
+
 before_script:
   - apk add --no-cache curl
 
 build:
   stage: build
   script:
-    - docker info
     - docker login -u $CI_USER -p $CI_PSW
-    - docker build -t $DOCKER_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME .
+    - docker build -t jandrov/validation-service:$CI_COMMIT_REF_NAME .
     - docker push jandrov/validation-service:$CI_COMMIT_REF_NAME
   only:
     - main
