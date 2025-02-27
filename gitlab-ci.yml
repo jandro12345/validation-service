@@ -19,3 +19,4 @@ build:
     - docker build -t $DOCKER_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME .
   only:
     - main
+    - tags
