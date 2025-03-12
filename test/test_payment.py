@@ -15,10 +15,10 @@ load_dotenv()
 @pytest.fixture
 def invalid_payment_data():
     return AddPayment(
-        number="7777777777777778",
+        number="7777777777777777",
         expiration_date="01/30",
         cvv="234",
-        amount=50000
+        amount=50
     )
 
 
